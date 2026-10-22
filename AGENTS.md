@@ -45,6 +45,14 @@ Symbol naming for C++, assembly, and Rust follows the Rust conventions:
 
 Avoid abbreviations unless they are established domain terms.
 
+C++ declaration style:
+
+- Refer to types by their `UpperCamelCase` name only — never carry C-style tag
+  prefixes (`struct tx_queue *`); pass objects as references (`TxQueue &`),
+  pointers only when nullability or ownership requires it.
+- Use fixed-width integer typedefs for interfaces: unsigned `U8`, `U16`,
+  `U32`, `U64`; signed `S8`, `S16`, `S32`, `S64`; and `SizeType` for sizes.
+
 ## Include Style (C/C++)
 
 - Quoted includes (`#include "x.h"`) are FORBIDDEN. Always use the angle-bracket
@@ -101,7 +109,8 @@ Groups in the example: (1) C++ standard library, (2) POSIX/system,
 
 ### C++ and Assembly — Doxygen
 
-Use Doxygen comment blocks (`/** ... */` for declarations; `;` Doxygen-aware comments in assembly where supported).
+Use Doxygen comment blocks (`/** ... */` for declarations; `;` Doxygen-aware
+comments in assembly where supported).
 
 - Every public/internal function gets a full Doxygen block:
   - `@brief` states what the function does.
@@ -110,14 +119,22 @@ Use Doxygen comment blocks (`/** ... */` for declarations; `;` Doxygen-aware com
     MANDATORY: `@param[out]` for outputs, `@param[in,out]` for in/out (and
     `@param[in]` for inputs in that mixed case).
   - `@return` documents the return value, including error codes.
-  - `@note` MUST be used for ANY requirement placed on the caller: thread-safety, call-order constraints, locking requirements, pointer lifetime, allocation ownership, etc.
-- Units MUST be stated in comments when the type does not encode them, e.g. `@param length Length (m)`. Time, byte size, buffer capacity and counts of physical units all need the unit or meaning of the count.
-- Comment fields MUST be aligned to tab stops (aligned `@param` names, descriptions of the same field start at the same column across the block).
-- Blank comment lines MUST separate blocks of different tag kinds (e.g. after `@brief`, after `@note`, after the last `@param`, before `@return`); never mix tag kinds in one contiguous block without a blank ` * ` line between them.
+  - `@note` MUST be used for ANY requirement placed on the caller:
+    thread-safety, call-order constraints, locking requirements, pointer
+    lifetime, allocation ownership, etc.
+- Units MUST be stated in comments when the type does not encode them,
+  e.g. `@param length Length (m)`. Time, byte size, buffer capacity and counts
+  of physical units all need the unit or meaning of the count.
+- Comment fields MUST be aligned to tab stops (aligned `@param` names,
+  descriptions of the same field start at the same column across the block).
+- Blank comment lines MUST separate blocks of different tag kinds (e.g. after
+  `@brief`, after `@note`, after the last `@param`, before `@return`); never
+  mix tag kinds in one contiguous block without a blank ` * ` line between.
 - When declaration and implementation are separated:
   - The **declaration** (header) carries the **full** Doxygen function comment.
   - The **implementation** keeps only `@brief` in its Doxygen block.
-- In long function implementations, interleave explanatory comments that help the reader understand non-obvious logic.
+- In long function implementations, interleave explanatory comments that help
+  the reader understand non-obvious logic.
 
 Example:
 
@@ -131,23 +148,30 @@ Example:
  * @param   packet     Packet to enqueue; ownership transfers to the library.
  * @param   length     Payload size (B).
  *
- * @return  0 on success, or a negative errno on failure.
+ * @return  S32 status: 0 on success, negative errno on failure.
  */
-int txq_enqueue(struct tx_queue *queue, struct packet *packet, size_t length);
+S32 packet_enqueue(TxQueue &queue, Packet &packet, SizeType length);
 ```
 
 ### Rust — rustdoc
 
-- Use `///` doc comments for public items (`pub fn`, `pub struct`, `pub trait`, `pub enum`), module-level `//!` docs at the top of each crate file.
-- First line is a single-sentence summary; follow with a blank comment line for details.
-- Document parameters/return semantics in prose or `# Arguments` / `# Returns` / `# Errors` sections; note caller obligations (thread-safety, `unsafe` preconditions) explicitly, using `# Safety` for `unsafe fn` preconditions.
+- Use `///` doc comments for public items (`pub fn`, `pub struct`, `pub trait`,
+  `pub enum`), module-level `//!` docs at the top of each crate file.
+- First line is a single-sentence summary; follow with a blank comment line for
+  details.
+- Document parameters/return semantics in prose or `# Arguments` / `# Returns` /
+  `# Errors` sections; note caller obligations (thread-safety, `unsafe`
+  preconditions) explicitly, using `# Safety` for `unsafe fn` preconditions.
 - Units follow the same rule as C++: state them when the type does not encode them.
 
 ### Python 3 — pydoc
 
-- Use double-quoted docstrings (`"""..."""`) on every public module, class, and function.
-- First line is a concise summary; follow with argument/return descriptions (Google-style `Args:` / `Returns:` recommended and used consistently).
-- State caller requirements (thread-safety, required context, ordering) explicitly.
+- Use double-quoted docstrings (`"""..."""`) on every public module, class, and
+  function.
+- First line is a concise summary; follow with argument/return descriptions
+  (Google-style `Args:` / `Returns:` recommended and used consistently).
+- State caller requirements (thread-safety, required context, ordering)
+  explicitly.
 - Units follow the same rule as C++: state them in the argument description.
 
 ## Repository Layout
@@ -158,6 +182,7 @@ int txq_enqueue(struct tx_queue *queue, struct packet *packet, size_t length);
 | `lib/`    | Userspace (application-facing) interface library                     | LGPLv3   |
 | `doc/`    | Documentation sources                                                | —        |
 | `dsl/`    | Python 3 DSL that compiles the driver-IPC interface                  | GPLv3    |
+| `tools/`  | Repository maintenance scripts and git hooks (not product code)      | —        |
 
 Every new source file MUST carry the correct SPDX header for its directory:
 
