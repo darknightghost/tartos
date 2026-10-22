@@ -105,7 +105,10 @@ Use Doxygen comment blocks (`/** ... */` for declarations; `;` Doxygen-aware com
 
 - Every public/internal function gets a full Doxygen block:
   - `@brief` states what the function does.
-  - `@param[in]` / `@param[out]` document each parameter when direction is not obvious; use plain `@param` for in/out. Mark the direction explicitly whenever a parameter is an output or in/out.
+  - `@param` is written WITHOUT a direction tag only when every parameter is
+    input-only. If any parameter is an output or in/out, direction tags are
+    MANDATORY: `@param[out]` for outputs, `@param[in,out]` for in/out (and
+    `@param[in]` for inputs in that mixed case).
   - `@return` documents the return value, including error codes.
   - `@note` MUST be used for ANY requirement placed on the caller: thread-safety, call-order constraints, locking requirements, pointer lifetime, allocation ownership, etc.
 - Units MUST be stated in comments when the type does not encode them, e.g. `@param length Length (m)`. Time, byte size, buffer capacity and counts of physical units all need the unit or meaning of the count.
