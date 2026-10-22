@@ -38,31 +38,65 @@
 *.out
 *.app
 
+# Debug information files
+*.dwo
+
+# Kernel build artifacts
+*.ko
+*.mod.c
+*.mod
+*.order
+*.symtypes
+.tmp_versions/
+modules.order
+Module.symvers
+
 # Build directories
+# Layout: build/<isa>/<arch>/<platform>/          (intermediate files)
+#         output/<isa>/<arch>/<platform>/kernel/  (generated kernel files)
+#         output/<isa>/<arch>/<platform>/include/ (application-layer headers)
+#         output/<isa>/<arch>/<platform>/lib/     (application-layer runtime libraries)
+#         output/<isa>/<arch>/<platform>/doc/     (compiled developer documentation)
 build/
 Build/
 build-*/
+output/
 
 # CMake generated files
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
-Makefile
 install_manifest.txt
 compile_commands.json
+Makefile
+
+# Rust (cargo)
+target/
+Cargo.lock
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
 
 # Temporary files
 *.tmp
 *.log
 *.bak
 *.swp
+*.swo
 
 # vcpkg
 vcpkg_installed/
 
-# debug information files
-*.dwo
-
-# test output & cache
-Testing/
+# IDE / tool caches
 .cache/
+.build/
+.vscode/
+.idea/
+.qoder/
+
+# Local overrides (personal, keep out of VCS)
+AGENTS.local.md

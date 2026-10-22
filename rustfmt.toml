@@ -1,0 +1,10 @@
+# rustfmt configuration for tartos.
+# Matches the 4-space / 80-column style used by .clang-format.
+edition = "2021"
+max_width = 80
+tab_spaces = 4
+use_small_heuristics = "Default"
+reorder_imports = true
+reorder_modules = true
+match_arm_blocks = true
+newline_style = "Unix"

@@ -1,0 +1,10 @@
+[style]
+# Python 3 formatting for tartos: PEP 8 via yapf, matching /scripts/autostyle.
+based_on_style = pep8
+column_limit = 80
+indent_width = 4
+continuation_indent_width = 4
+use_tabs = false
+split_before_logical_operator = true
+coalesce_brackets = true
+each_dict_entry_on_separate_line = true

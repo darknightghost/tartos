@@ -1,0 +1,122 @@
+# tartos
+
+## General Rules
+
+- All documentation and comments MUST be written in **English**.
+- Indentation and formatting follow the project style tool `/scripts/autostyle`,
+  with per-language configuration files checked in at the repository root:
+  - C/C++: `.clang-format` (clang-format, 4-space indent, no tabs, 80-column
+    limit, Allman function braces, aligned consecutive
+    declarations/assignments/macros/comments). Static analysis uses
+    `.clang-tidy` (naming checks enforce the Rust conventions below).
+  - Python 3: `.style.yapf` (yapf, `based_on_style = pep8`, PEP 8 compatible).
+  - Rust: `rustfmt.toml` (rustfmt, 80-column / 4-space to match C/C++).
+  - Assembly: 4-space indentation, consistent with C/C++.
+- After creating or modifying any source file, run `/scripts/autostyle <path>` on it.
+- Bulk formatting: `tools/format-all.sh` formats everything under `dsl/`,
+  `kernel/`, and `lib/`.
+- Git hook: `tools/git-hooks/pre-commit` (activated via
+  `git config core.hooksPath tools/git-hooks`) formats staged files under
+  `dsl/`, `kernel/`, `lib/` and re-stages them automatically.
+
+## Naming Conventions
+
+Symbol naming for C++, assembly, and Rust follows the Rust conventions:
+
+| Kind                     | Style                    | Example              |
+| ------------------------ | ------------------------ | -------------------- |
+| Functions / methods      | `snake_case`             | `packet_send`        |
+| Variables / parameters   | `snake_case`             | `queue_len`          |
+| Types (struct/enum/trait)| `UpperCamelCase` (PascalCase) | `DriverDescriptor` |
+| Enum / struct variants   | `UpperCamelCase`         | `Ready`              |
+| Constants / statics      | `SCREAMING_SNAKE_CASE`   | `MAX_RETRY_COUNT`    |
+| Traits                   | `UpperCamelCase` (+`able`/`ible`) | `Sendable`     |
+| Crates / modules         | `snake_case`, no underscores at start/end | `drv_ipc` |
+| Files / labels           | `snake_case` matching module/function purpose | `drv_ipc.c` |
+
+Avoid abbreviations unless they are established domain terms.
+
+## Comment / Documentation Style
+
+### C++ and Assembly — Doxygen
+
+Use Doxygen comment blocks (`/** ... */` for declarations; `;` Doxygen-aware comments in assembly where supported).
+
+- Every public/internal function gets a full Doxygen block:
+  - `@brief` states what the function does.
+  - `@param[in]` / `@param[out]` document each parameter when direction is not obvious; use plain `@param` for in/out. Mark the direction explicitly whenever a parameter is an output or in/out.
+  - `@return` documents the return value, including error codes.
+  - `@note` MUST be used for ANY requirement placed on the caller: thread-safety, call-order constraints, locking requirements, pointer lifetime, allocation ownership, etc.
+- Units MUST be stated in comments when the type does not encode them, e.g. `@param length Length (m)`. Time, byte size, buffer capacity and counts of physical units all need the unit or meaning of the count.
+- Comment fields MUST be aligned to tab stops (aligned `@param` names, descriptions of the same field start at the same column across the block).
+- Blank comment lines MUST separate blocks of different tag kinds (e.g. after `@brief`, after `@note`, after the last `@param`, before `@return`); never mix tag kinds in one contiguous block without a blank ` * ` line between them.
+- When declaration and implementation are separated:
+  - The **declaration** (header) carries the **full** Doxygen function comment.
+  - The **implementation** keeps only `@brief` in its Doxygen block.
+- In long function implementations, interleave explanatory comments that help the reader understand non-obvious logic.
+
+Example:
+
+```cpp
+/**
+ * @brief   Enqueue one packet for transmission on the given queue.
+ *
+ * @note    NOT thread-safe: caller must hold the queue lock.
+ *
+ * @param   queue      Transmission queue to use.
+ * @param   packet     Packet to enqueue; ownership transfers to the library.
+ * @param   length     Payload size (B).
+ *
+ * @return  0 on success, or a negative errno on failure.
+ */
+int txq_enqueue(struct tx_queue *queue, struct packet *packet, size_t length);
+```
+
+### Rust — rustdoc
+
+- Use `///` doc comments for public items (`pub fn`, `pub struct`, `pub trait`, `pub enum`), module-level `//!` docs at the top of each crate file.
+- First line is a single-sentence summary; follow with a blank comment line for details.
+- Document parameters/return semantics in prose or `# Arguments` / `# Returns` / `# Errors` sections; note caller obligations (thread-safety, `unsafe` preconditions) explicitly, using `# Safety` for `unsafe fn` preconditions.
+- Units follow the same rule as C++: state them when the type does not encode them.
+
+### Python 3 — pydoc
+
+- Use double-quoted docstrings (`"""..."""`) on every public module, class, and function.
+- First line is a concise summary; follow with argument/return descriptions (Google-style `Args:` / `Returns:` recommended and used consistently).
+- State caller requirements (thread-safety, required context, ordering) explicitly.
+- Units follow the same rule as C++: state them in the argument description.
+
+## Repository Layout
+
+| Directory | Purpose                                                              | License  |
+| --------- | -------------------------------------------------------------------- | -------- |
+| `kernel/` | Kernel sources                                                       | GPLv3    |
+| `lib/`    | Userspace (application-facing) interface library                     | LGPLv3   |
+| `doc/`    | Documentation sources                                                | —        |
+| `dsl/`    | Python 3 DSL that compiles the driver-IPC interface                  | GPLv3    |
+
+Every new source file MUST carry the correct SPDX header for its directory:
+
+- `kernel/`, `dsl/`: `SPDX-License-Identifier: GPL-3.0-only`
+- `lib/`: `SPDX-License-Identifier: LGPL-3.0-only`
+
+## Build and Output Layout
+
+Intermediate build artifacts and generated files are organized per
+ISA / architecture / platform:
+
+```text
+build/<isa>/<arch>/<platform>/            # intermediate files (objects, generated sources)
+output/<isa>/<arch>/<platform>/kernel/    # generated kernel files
+output/<isa>/<arch>/<platform>/include/   # application-layer headers
+output/<isa>/<arch>/<platform>/lib/       # application-layer runtime libraries
+output/<isa>/<arch>/<platform>/doc/       # compiled developer documentation
+```
+
+- `<isa>` / `<arch>` / `<platform>` segments MUST stay in this order; use the
+  same triple consistently across `build/` and `output/` for a given
+  configuration.
+- Nothing under `build/` or `output/` is ever committed to VCS (both trees are
+  gitignored).
+- Headers exported for userspace belong in `output/.../include/`; runtime
+  libraries produced from `lib/` belong in `output/.../lib/`.
