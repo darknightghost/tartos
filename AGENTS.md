@@ -19,6 +19,15 @@
   `git config core.hooksPath tools/git-hooks`) formats staged files under
   `dsl/`, `kernel/`, `lib/` and re-stages them automatically.
 
+## Toolchain Requirements
+
+Development targets the following language/tool versions:
+
+- Python **3.14** (DSL scripts).
+- C++ **26** (compile with `-std=c++26`; host g++ and `arm-none-eabi-g++`
+  16.2.x both support it).
+- Rust **1.99.1** (edition 2024).
+
 ## Naming Conventions
 
 Symbol naming for C++, assembly, and Rust follows the Rust conventions:
@@ -35,6 +44,58 @@ Symbol naming for C++, assembly, and Rust follows the Rust conventions:
 | Files / labels           | `snake_case` matching module/function purpose | `drv_ipc.c` |
 
 Avoid abbreviations unless they are established domain terms.
+
+## Include Style (C/C++)
+
+- Quoted includes (`#include "x.h"`) are FORBIDDEN. Always use the angle-bracket
+  form `#include <x.h>`.
+- Never reference a file by a path relative to the current file. All includes
+  are resolved from the configured include directories, so the path written
+  must start at the include root.
+- Includes are grouped by category, groups separated by one blank line, in the
+  following order:
+  1. Language/toolchain-provided files (C++ standard library, compiler
+     intrinsics/runtime).
+  2. System (OS/libc) headers.
+  3. Third-party libraries — one group per library.
+  4. Other modules of this project — one group per module.
+  5. Files of the current module.
+  6. If the current file is a `.cpp`/`.cc`, its corresponding header goes
+     last, in its own group.
+- If a group depends on another group, the depended-upon group MUST be placed
+  above the dependent one.
+- Within a group, include order is normalized alphabetically by
+  `clang-format` (`SortIncludes` sorts inside each contiguous block; blocks are
+  kept, not reordered, thanks to `IncludeBlocks: Preserve`). The example below
+  is illustrative; the on-disk result after formatting is sorted per group.
+
+Example — current file `c/c.cpp`:
+
+```cpp
+#include <cstdio>
+#include <chrono>
+
+#include <unistd.h>
+#include <epoll.h>
+
+#include <zlib.h>
+
+#include <QtCore/QObject>
+
+#include <a/a.h>
+#include <a/ac.h>
+
+#include <b/bb.h>
+
+#include <c/a.h>
+#include <c/b.h>
+
+#include <c.c.h>
+```
+
+Groups in the example: (1) C++ standard library, (2) POSIX/system,
+(3) third-party zlib and Qt, (4) other project modules `a`/`b`,
+(5) current module `c`, (6) header of the current file `c.cpp`.
 
 ## Comment / Documentation Style
 
