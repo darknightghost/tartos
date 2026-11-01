@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Pre-commit hook: format staged source files under dsl/, kernel/, lib/.
+# Pre-commit hook: format staged source files under dsl/, kernel/, lib/,
+# test/.
 set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
@@ -9,7 +10,7 @@ cd "$REPO_ROOT"
 
 [ -x "$AUTOSTYLE" ] || { echo "pre-commit: autostyle not found at $AUTOSTYLE" >&2; exit 1; }
 
-staged_files=$(git diff --cached --name-only --diff-filter=ACMR -- dsl kernel lib)
+staged_files=$(git diff --cached --name-only --diff-filter=ACMR -- dsl kernel lib test)
 [ -z "$staged_files" ] && exit 0
 
 rescan=0

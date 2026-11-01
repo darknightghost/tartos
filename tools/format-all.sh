@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# Format all source files under dsl/, kernel/, lib/ via /scripts/autostyle.
+# Format all source files under dsl/, kernel/, lib/, test/ via
+# /scripts/autostyle.
 # Usage: tools/format-all.sh [path ...]
-# With no arguments, formats the three source directories.
+# With no arguments, formats the four source directories.
 set -euo pipefail
 
 AUTOSTYLE="${AUTOSTYLE:-/scripts/autostyle}"
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-DIRS=(dsl kernel lib)
+DIRS=(dsl kernel lib test)
 
 cd "$REPO_ROOT"
 
